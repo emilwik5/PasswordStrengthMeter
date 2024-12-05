@@ -12,7 +12,7 @@ const AccountRegistration = ({ onRegister }: AccountRegistrationProps) => {
 
   const handleRegister = () => {
     if (fullName && email && password) {
-      onRegister(fullName, email, password); // Pass data to parent
+      onRegister(fullName, email, password);
     } else {
       alert("Please fill all fields");
     }
