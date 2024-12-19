@@ -1,16 +1,21 @@
 import React, { useState } from "react";
-import { View, Alert } from "react-native";
+import { View, Alert, SafeAreaView, StyleSheet, Text } from "react-native";
 import AccountRegistration from "./components/AccountRegistration/AccountRegistration";
 import PasswordStrengthMeter from "./components/PasswordStrengthMeter/PasswordStrengthMeter";
 
+export default function App() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-
-export default function Index() {
-  const handleRegister = (fullName: string, email: string, password: string) => {
-    Alert.alert("Registration Success", `Welcome, ${fullName}!`);
+  const handleRegister = () => {
+    if (!fullName || !email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    Alert.alert("Success", `Welcome, ${fullName}!`);
   };
 
-  const [password, setPassword] = useState("");
   const colors = ["white", "orange", "purple", "green", "yellow"];
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
@@ -21,3 +26,10 @@ export default function Index() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+});
