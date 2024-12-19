@@ -22,7 +22,21 @@ export default function App() {
       <AccountRegistration onRegister={handleRegister} />
 
 
-      <PasswordStrengthMeter minLength={3} password={password} texts={["hello", "its me", "imincala", "drimin", "who"]} colors={["white"]} onPasswordChange={setPassword} />
+      <PasswordStrengthMeter
+        password={password}
+        onPasswordChange={setPassword}
+        checks={[
+          (password) => password.length >= 8,
+          (password) => /[A-Z]/.test(password),
+          (password) => /[0-9]/.test(password),
+          (password) => /[@$!%*?&#]/.test(password),
+          (password) => /[3]/.test(password),
+          (password) => password.length >= 16,
+        ]}
+        requiredChecks={3}
+        colors={["gray", "red", "orange", "yellow", "green", "blue", "pink"]}
+        texts={["Too Short", "Weak", "Fair", "Good", "Strong", "Very Strong"]}
+      />
     </View>
   );
 }

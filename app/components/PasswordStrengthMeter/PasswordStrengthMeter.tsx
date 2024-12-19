@@ -1,55 +1,62 @@
 import React, { useState, useEffect } from "react";
-import { TextInput, Text, View, StyleSheet } from "react-native";
+import { TextInput, Text, View, StyleSheet, Button, Alert, Dimensions } from "react-native";
 
 interface PasswordStrengthMeterProps {
   password: string;
   colors?: string[];
   texts?: string[];
   minLength?: number;
+  checks?: ((password: string) => boolean)[];
+  requiredChecks?: number;
+  buttonTitle?: string;
   onPasswordChange: (password: string) => void;
 }
 
-let defaultColors = ["gray", "red", "orange", "yellow", "green"];
-let defaultTexts = ["Too Short", "Strong", "Good", "Fair", "Weak"];
+const defaultColors = ["gray", "red", "orange", "yellow", "green"];
+const defaultTexts = ["Too Short", "Weak", "Fair", "Good", "Strong"];
 
 const PasswordStrengthMeter = ({
   password,
-  colors = ["gray", "red", "orange", "yellow", "green"],
-  texts = ["Too Short", "Strong", "Good", "Fair", "Weak"],
+  colors = defaultColors,
+  texts = defaultTexts,
   minLength = 8,
+  checks = [
+    (password) => password.length >= minLength,
+    (password) => /[A-Za-z]/.test(password),
+    (password) => /[0-9]/.test(password),
+    (password) => /[!@#$%^&*]/.test(password),
+  ],
+  requiredChecks = 3,
+  buttonTitle = "Send",
   onPasswordChange,
 }: PasswordStrengthMeterProps) => {
   const [barColor, setBarColor] = useState<string>("gray");
   const [strengthText, setStrengthText] = useState<string>("Too Short");
+  const [passedChecks, setPassedChecks] = useState<number>(0);
 
   useEffect(() => {
     const calculateStrength = () => {
-      let num = 0;
+      const passed = checks.reduce((count, check) => (check(password) ? count + 1 : count), 0); // Count passed checks
+      setPassedChecks(passed);
 
-      if (password.length < minLength) num = 0;
-      else if (
-        password.length > 12 &&
-        password.match(/[A-Za-z]/) &&
-        password.match(/![@#$%^&*]/) &&
-        password.match(/[0-9]/)
-      )
-        num = 1;
-      else if (
-        password.match(/[A-Za-z]/) &&
-        password.match(/![@#$%^&*]/) &&
-        password.match(/[0-9]/)
-      )
-        num = 2;
-      else if (password.match(/[A-Za-z]/) && password.match(/[0-9]/))
-        num = 3;
-      else num = 4;
-
-      setBarColor(colors[num] || defaultColors[num]);
-      setStrengthText(texts[num] || defaultTexts[num]);
+      const strengthIndex = Math.min(passedChecks, colors.length - 1);
+      setBarColor(colors[strengthIndex]);
+      setStrengthText(texts[strengthIndex]);
     };
 
     calculateStrength();
-  }, [password, colors]); // Ska kunna välja krav + välja hur många krav + välja vad som står
+  }, [password, checks, colors, texts]);
+
+  const handleRegister = () => {
+    if (passedChecks < requiredChecks) {
+      Alert.alert(`Password must pass at least ${requiredChecks} checks`);
+    } else {
+      Alert.alert("Success!");
+    }
+  };
+
+  const screenWidth = Dimensions.get("window").width;
+  const barWidth = (passedChecks / checks.length) * screenWidth;
 
   return (
     <View style={styles.container}>
@@ -60,19 +67,18 @@ const PasswordStrengthMeter = ({
         secureTextEntry
         style={styles.input}
       />
-      {password.length < minLength && (
-        <Text>Minimum of {minLength} characters</Text>
-      )}
-      <Text
-        style={[
-          {
-            fontSize: 14,
-            backgroundColor: barColor,
-          },
-        ]}
-      >
-        Strength: {strengthText}
+      <View style={styles.barBackground}>
+        <View
+          style={[
+            styles.bar,
+            { backgroundColor: barColor, width: barWidth },
+          ]}
+        />
+      </View>
+      <Text style={styles.strengthText}>
+        Strength: {strengthText} ({passedChecks}/{checks.length} checks passed)
       </Text>
+      <Button title={buttonTitle} onPress={handleRegister} />
     </View>
   );
 };
@@ -89,6 +95,22 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
+  },
+  barBackground: {
+    height: 10,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 5,
+    overflow: "hidden",
+    marginVertical: 5,
+    width: "100%",
+  },
+  bar: {
+    height: "100%",
+    borderRadius: 5,
+  },
+  strengthText: {
+    fontSize: 14,
+    marginVertical: 5,
   },
 });
 
