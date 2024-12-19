@@ -1,38 +1,25 @@
 import React, { useState } from "react";
-import { TextInput, View, Button, StyleSheet, Alert } from "react-native";
+import { TextInput, View, Button, StyleSheet, Alert, TouchableOpacity, Text } from "react-native";
+
+interface FieldInput {
+  placeholder: string;
+  onChangeText: (value: string) => void;
+  secureTextEntry?: boolean;
+  enableToggleVisibility?: boolean;
+}
 
 interface AccountRegistrationProps {
-  fullName?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-  };
-  email?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-  };
-  password?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-    secureTextEntry?: boolean;
-  };
-  username?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-  };
-  phoneNumber?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-  };
-  dateOfBirth?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-  };
-  address?: {
-    placeholder: string;
-    onChangeText: (value: string) => void;
-  };
+  fullName?: FieldInput;
+  email?: FieldInput;
+  password?: FieldInput;
+  username?: FieldInput;
+  phoneNumber?: FieldInput;
+  dateOfBirth?: FieldInput;
+  address?: FieldInput;
   buttonTitle?: string;
   invalidBorderColor?: string;
+  validBorderColor?: string;
+  mandatoryBorderColor?: string;
   requiredFields?: string[];
 }
 
@@ -44,162 +31,156 @@ const AccountRegistration: React.FC<AccountRegistrationProps> = ({
   phoneNumber,
   dateOfBirth,
   address,
-  buttonTitle = "Register",
+  buttonTitle = "Sign Up!",
   invalidBorderColor = "red",
-  requiredFields = [], 
+  validBorderColor = "green",
+  mandatoryBorderColor = "orange",
+  requiredFields = ["email", "password"],
 }) => {
-  const [fullNameValue, setFullNameValue] = useState("");
-  const [emailValue, setEmailValue] = useState("");
-  const [passwordValue, setPasswordValue] = useState("");
-  const [usernameValue, setUsernameValue] = useState("");
-  const [phoneNumberValue, setPhoneNumberValue] = useState("");
-  const [dateOfBirthValue, setDateOfBirthValue] = useState("");
-  const [addressValue, setAddressValue] = useState("");
+  const [formValues, setFormValues] = useState<Record<string, string>>({
+    fullName: "",
+    email: "",
+    password: "",
+    username: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    address: "",
+  });
+  const [formTouched, setFormTouched] = useState<Record<string, boolean>>({});
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const [isFullNameInvalid, setIsFullNameInvalid] = useState(false);
-  const [isEmailInvalid, setIsEmailInvalid] = useState(false);
-  const [isPasswordInvalid, setIsPasswordInvalid] = useState(false);
-  const [isDateOfBirthInvalid, setIsDateOfBirthInvalid] = useState(false);
-
-  const validateDate = (date: string) => {
-    const regex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!regex.test(date)) return false;
-    const [year, month, day] = date.split("-").map(Number);
-    const dateObject = new Date(year, month - 1, day);
-    return (
-      dateObject.getFullYear() === year &&
-      dateObject.getMonth() === month - 1 &&
-      dateObject.getDate() === day
-    );
+  const handleInputChange = (fieldName: string, value: string) => {
+    setFormValues((prev) => ({ ...prev, [fieldName]: value }));
+    setFormTouched((prev) => ({ ...prev, [fieldName]: true }));
   };
 
-  const handleRegister = () => {
-    let hasErrors = false;
+  const validateField = (fieldName: string, value: string): string | null => {
+    if (requiredFields.includes(fieldName)) {
+      if (!value) return "This field is required.";
 
-    if (requiredFields.includes("fullName") && !fullNameValue) {
-      setIsFullNameInvalid(true);
-      hasErrors = true;
-    } else {
-      setIsFullNameInvalid(false);
+      if (fieldName === "email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) return "Invalid email format.";
+      }
+
+      if (fieldName === "password") {
+        if (value.length < 6)
+          return "Password must be at least 6 characters long.";
+      }
+
+      if (fieldName === "phoneNumber") {
+        const phoneRegex = /^[0-9]+$/;
+        if (!phoneRegex.test(value))
+          return "Phone number must contain only digits.";
+      }
+
+      if (fieldName === "dateOfBirth") {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(value))
+          return "Date of birth must be in YYYY-MM-DD format.";
+        const [year, month, day] = value.split("-").map(Number);
+        const isValidDate =
+          year > 1900 &&
+          year <= new Date().getFullYear() &&
+          month >= 1 &&
+          month <= 12 &&
+          day >= 1 &&
+          day <= new Date(year, month, 0).getDate();
+        if (!isValidDate) return "Invalid date.";
+      }
     }
+    return null;
+  };
 
-    if (
-      requiredFields.includes("email") &&
-      (!emailValue || !emailValue.includes("@"))
-    ) {
-      setIsEmailInvalid(true);
-      hasErrors = true;
-    } else {
-      setIsEmailInvalid(false);
-    }
+  const signUp = () => {
+    setFormSubmitted(true);
 
-    if (requiredFields.includes("password") && passwordValue.length < 6) {
-      setIsPasswordInvalid(true);
-      hasErrors = true;
-    } else {
-      setIsPasswordInvalid(false);
-    }
+    const errors = requiredFields.map((field) =>
+      validateField(field, formValues[field] || "")
+    );
 
-    if (
-      requiredFields.includes("dateOfBirth") &&
-      !validateDate(dateOfBirthValue)
-    ) {
-      setIsDateOfBirthInvalid(true);
-      hasErrors = true;
-    } else {
-      setIsDateOfBirthInvalid(false);
-    }
-
-    if (hasErrors) {
+    if (errors.some((error) => error !== null)) {
       Alert.alert("Error", "Please correct the highlighted fields.");
       return;
     }
 
-    Alert.alert("Success", `Account created for: ${fullNameValue || "User"}!`);
+    Alert.alert("Success", `Account created for: ${formValues.fullName || "User"}!`);
+  };
 
-    fullName?.onChangeText(fullNameValue);
-    email?.onChangeText(emailValue);
-    password?.onChangeText(passwordValue);
-    username?.onChangeText(usernameValue);
-    phoneNumber?.onChangeText(phoneNumberValue);
-    dateOfBirth?.onChangeText(dateOfBirthValue);
-    address?.onChangeText(addressValue);
+  const getBorderColor = (fieldName: string, value: string) => {
+    const isTouched = formTouched[fieldName];
+    const error = validateField(fieldName, value);
+
+    if (!isTouched && requiredFields.includes(fieldName)) {
+      return !value ? mandatoryBorderColor : "gray";
+    }
+
+    if (!value) {
+      return requiredFields.includes(fieldName) ? mandatoryBorderColor : "gray";
+    }
+
+    if (error) {
+      return invalidBorderColor;
+    }
+
+    return validBorderColor;
+  };
+
+  const renderField = (
+    fieldName: string,
+    fieldProps?: FieldInput,
+    isPassword?: boolean
+  ) => {
+    if (!fieldProps) return null;
+
+    const value = formValues[fieldName];
+
+    return (
+      <View key={fieldName} style={{ marginBottom: 15 }}>
+        <TextInput
+          placeholder={fieldProps.placeholder}
+          value={value}
+          onChangeText={(text) => handleInputChange(fieldName, text)}
+          style={[
+            styles.input,
+            { borderColor: getBorderColor(fieldName, value) },
+          ]}
+          secureTextEntry={
+            isPassword && fieldProps.secureTextEntry
+              ? !isPasswordVisible
+              : false
+          }
+        />
+        {isPassword && fieldProps.enableToggleVisibility && fieldProps.secureTextEntry && (
+          <TouchableOpacity
+            onPress={() => setIsPasswordVisible((prev) => !prev)}
+            style={styles.toggleButton}
+          >
+            <Text style={styles.toggleText}>
+              {isPasswordVisible ? "Hide" : "Show"}
+            </Text>
+          </TouchableOpacity>
+        )}
+        {formSubmitted &&
+          requiredFields.includes(fieldName) &&
+          validateField(fieldName, value) && (
+            <Text style={styles.errorText}>{validateField(fieldName, value)}</Text>
+          )}
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
-      {fullName && (
-        <TextInput
-          placeholder={fullName.placeholder}
-          value={fullNameValue}
-          onChangeText={(text) => setFullNameValue(text)}
-          style={[
-            styles.input,
-            isFullNameInvalid && { borderColor: invalidBorderColor },
-          ]}
-        />
-      )}
-      {email && (
-        <TextInput
-          placeholder={email.placeholder}
-          value={emailValue}
-          onChangeText={(text) => setEmailValue(text)}
-          style={[
-            styles.input,
-            isEmailInvalid && { borderColor: invalidBorderColor },
-          ]}
-          keyboardType="email-address"
-        />
-      )}
-      {password && (
-        <TextInput
-          placeholder={password.placeholder}
-          value={passwordValue}
-          onChangeText={(text) => setPasswordValue(text)}
-          style={[
-            styles.input,
-            isPasswordInvalid && { borderColor: invalidBorderColor },
-          ]}
-          secureTextEntry={password.secureTextEntry}
-        />
-      )}
-      {username && (
-        <TextInput
-          placeholder={username.placeholder}
-          value={usernameValue}
-          onChangeText={(text) => setUsernameValue(text)}
-          style={styles.input}
-        />
-      )}
-      {phoneNumber && (
-        <TextInput
-          placeholder={phoneNumber.placeholder}
-          value={phoneNumberValue}
-          onChangeText={(text) => setPhoneNumberValue(text)}
-          style={styles.input}
-          keyboardType="phone-pad"
-        />
-      )}
-      {dateOfBirth && (
-        <TextInput
-          placeholder={dateOfBirth.placeholder}
-          value={dateOfBirthValue}
-          onChangeText={(text) => setDateOfBirthValue(text)}
-          style={[
-            styles.input,
-            isDateOfBirthInvalid && { borderColor: invalidBorderColor },
-          ]}
-        />
-      )}
-      {address && (
-        <TextInput
-          placeholder={address.placeholder}
-          value={addressValue}
-          onChangeText={(text) => setAddressValue(text)}
-          style={styles.input}
-        />
-      )}
-      <Button title={buttonTitle} onPress={handleRegister} />
+      {renderField("fullName", fullName)}
+      {renderField("email", email)}
+      {renderField("password", password, true)}
+      {renderField("username", username)}
+      {renderField("phoneNumber", phoneNumber)}
+      {renderField("dateOfBirth", dateOfBirth)}
+      {renderField("address", address)}
+      <Button title={buttonTitle} onPress={signUp} />
     </View>
   );
 };
@@ -210,11 +191,23 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: "gray",
     borderWidth: 1,
     borderRadius: 5,
-    marginBottom: 15,
     paddingHorizontal: 10,
+  },
+  toggleButton: {
+    position: "absolute",
+    right: 15,
+    top: 10,
+  },
+  toggleText: {
+    color: "blue",
+    fontWeight: "bold",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 5,
   },
 });
 

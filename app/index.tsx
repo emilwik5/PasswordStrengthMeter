@@ -23,6 +23,7 @@ export default function App() {
           placeholder: "Password",
           onChangeText: (value) => console.log("Password:", value),
           secureTextEntry: true,
+          enableToggleVisibility: false,
         }}
         dateOfBirth={{
           placeholder: "Date of Birth (YYYY-MM-DD)",
@@ -36,8 +37,11 @@ export default function App() {
           placeholder: "Phone Number",
           onChangeText: (value) => console.log("Phone Number:", value),
         }}
-        invalidBorderColor="orange"
-        requiredFields={["fullName", "email", "password"]}
+        requiredFields={["email", "password"]}
+        invalidBorderColor="red"
+        validBorderColor="green"
+        mandatoryBorderColor="orange"
+        buttonTitle="Register"
       />
       <PasswordStrengthMeter
         password={password}
@@ -53,6 +57,8 @@ export default function App() {
         requiredChecks={3}
         colors={["gray", "red", "orange", "yellow", "green", "blue", "pink"]}
         texts={["Too Short", "Weak", "Fair", "Good", "Strong", "Very Strong"]}
+        buttonTitle="Sign up!"
+
       />
     </SafeAreaView>
   );
