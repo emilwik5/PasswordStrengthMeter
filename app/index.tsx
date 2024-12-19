@@ -22,7 +22,7 @@ export default function App() {
       <AccountRegistration onRegister={handleRegister} />
 
 
-      <PasswordStrengthMeter password={password} colors={["white"]} onPasswordChange={setPassword} />
+      <PasswordStrengthMeter password={password} texts={["hello", "its me", "imincala", "drimin", "who"]} colors={["white"]} onPasswordChange={setPassword} />
     </View>
   );
 }

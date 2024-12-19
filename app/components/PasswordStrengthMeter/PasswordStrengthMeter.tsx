@@ -4,14 +4,19 @@ import { TextInput, Text, View, StyleSheet } from "react-native";
 interface PasswordStrengthMeterProps {
   password: string;
   colors?: string[];
+  texts?: string[];
+  minLength?: number;
   onPasswordChange: (password: string) => void;
 }
 
 let defaultColors = ["gray", "red", "orange", "yellow", "green"];
+let defaultTexts = ["Too Short", "Strong", "Good", "Fair", "Weak"];
 
 const PasswordStrengthMeter = ({
   password,
   colors = ["gray", "red", "orange", "yellow", "green"],
+  texts = ["Too Short", "Strong", "Good", "Fair", "Weak"],
+  minLength = 8,
   onPasswordChange,
 }: PasswordStrengthMeterProps) => {
   const [barColor, setBarColor] = useState<string>("gray");
@@ -21,7 +26,7 @@ const PasswordStrengthMeter = ({
     const calculateStrength = () => {
       let num = 0;
 
-      if (password.length < 8) num = 0;
+      if (password.length < minLength) num = 0;
       else if (
         password.length > 12 &&
         password.match(/[A-Za-z]/) &&
@@ -39,13 +44,12 @@ const PasswordStrengthMeter = ({
         num = 3;
       else num = 4;
 
-      const res = ["Too Short", "Strong", "Good", "Fair", "Weak"];
       setBarColor(colors[num] || defaultColors[num]);
-      setStrengthText(res[num]);
+      setStrengthText(texts[num] || defaultTexts[num]);
     };
 
     calculateStrength();
-  }, [password, colors]);
+  }, [password, colors]); // Ska kunna välja krav + välja hur många krav + välja vad som står
 
   return (
     <View style={styles.container}>
