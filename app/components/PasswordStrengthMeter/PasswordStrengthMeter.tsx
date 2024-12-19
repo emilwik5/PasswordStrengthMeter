@@ -60,6 +60,9 @@ const PasswordStrengthMeter = ({
         secureTextEntry
         style={styles.input}
       />
+      {password.length < minLength && (
+        <Text>Minimum of {minLength} characters</Text>
+      )}
       <Text
         style={[
           {
