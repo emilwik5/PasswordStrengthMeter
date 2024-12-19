@@ -11,11 +11,13 @@ export default function Index() {
   };
 
   const [password, setPassword] = useState("");
+  const colors = ["white", "orange", "purple", "green", "yellow"];
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
       <AccountRegistration onRegister={handleRegister} />
 
-      <PasswordStrengthMeter password={password} onPasswordChange={setPassword} />
+
+      <PasswordStrengthMeter password={password} colors={["white"]} onPasswordChange={setPassword} />
     </View>
   );
 }

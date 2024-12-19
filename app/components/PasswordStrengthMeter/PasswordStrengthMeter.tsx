@@ -1,21 +1,51 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { TextInput, Text, View, StyleSheet } from "react-native";
 
 interface PasswordStrengthMeterProps {
   password: string;
+  colors?: string[];
   onPasswordChange: (password: string) => void;
 }
 
+let defaultColors = ["gray", "red", "orange", "yellow", "green"];
+
 const PasswordStrengthMeter = ({
   password,
+  colors = ["gray", "red", "orange", "yellow", "green"],
   onPasswordChange,
 }: PasswordStrengthMeterProps) => {
-  const calculateStrength = () => {
-    if (password.length < 6) return "Weak";
-    if (password.match(/[A-Za-z]/) && password.match(/[0-9]/)) return "Medium";
-    if (password.length >= 8 && password.match(/[@#$%^&*]/)) return "Strong";
-    return "Weak";
-  };
+  const [barColor, setBarColor] = useState<string>("gray");
+  const [strengthText, setStrengthText] = useState<string>("Too Short");
+
+  useEffect(() => {
+    const calculateStrength = () => {
+      let num = 0;
+
+      if (password.length < 8) num = 0;
+      else if (
+        password.length > 12 &&
+        password.match(/[A-Za-z]/) &&
+        password.match(/![@#$%^&*]/) &&
+        password.match(/[0-9]/)
+      )
+        num = 1;
+      else if (
+        password.match(/[A-Za-z]/) &&
+        password.match(/![@#$%^&*]/) &&
+        password.match(/[0-9]/)
+      )
+        num = 2;
+      else if (password.match(/[A-Za-z]/) && password.match(/[0-9]/))
+        num = 3;
+      else num = 4;
+
+      const res = ["Too Short", "Strong", "Good", "Fair", "Weak"];
+      setBarColor(colors[num] || defaultColors[num]);
+      setStrengthText(res[num]);
+    };
+
+    calculateStrength();
+  }, [password, colors]);
 
   return (
     <View style={styles.container}>
@@ -26,7 +56,16 @@ const PasswordStrengthMeter = ({
         secureTextEntry
         style={styles.input}
       />
-      <Text style={styles.strengthText}>Strength: {calculateStrength()}</Text>
+      <Text
+        style={[
+          {
+            fontSize: 14,
+            backgroundColor: barColor,
+          },
+        ]}
+      >
+        Strength: {strengthText}
+      </Text>
     </View>
   );
 };
@@ -43,10 +82,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-  },
-  strengthText: {
-    fontSize: 14,
-    color: "gray",
   },
 });
 
