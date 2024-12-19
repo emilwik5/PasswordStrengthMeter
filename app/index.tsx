@@ -3,6 +3,19 @@ import { SafeAreaView, StyleSheet, Text } from "react-native";
 import AccountRegistration from "./components/AccountRegistration/AccountRegistration";
 
 export default function App() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = () => {
+    if (!fullName || !email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    Alert.alert("Success", `Welcome, ${fullName}!`);
+  };
+
+  const colors = ["white", "orange", "purple", "green", "yellow"];
   return (
     <SafeAreaView style={styles.container}>
       <Text>Account Registration</Text>
@@ -10,6 +23,10 @@ export default function App() {
         fullName={{
           placeholder: "Full Name",
           onChangeText: (value) => console.log("Full Name:", value),
+        }}
+        email={{
+          placeholder: "Email",
+          onChangeText: (value) => console.log("Email:", value),
         }}
         password={{
           placeholder: "Password",
@@ -29,7 +46,7 @@ export default function App() {
           onChangeText: (value) => console.log("Phone Number:", value),
         }}
         invalidBorderColor="orange"
-        requiredFields={["fullName", "password"]}
+        requiredFields={["fullName", "email", "password"]}
       />
     </SafeAreaView>
   );
